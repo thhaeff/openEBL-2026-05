@@ -159,7 +159,7 @@ jobs:
       - name: Create or update Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
           branch: automation/aggregation-output
           base: main
           title: "Update aggregation outputs"
