@@ -18,18 +18,18 @@ jobs:
       GH_TOKEN: ${{ github.token }}
 
     steps:
-      - name: Auto-pass for automated aggregation pushes
-        if: github.event_name == 'push' && github.actor == 'github-actions[bot]'
+      - name: Auto-pass for automated aggregation commits
+        if: github.actor == 'github-actions[bot]'
         run: |
-          echo "Push from github-actions[bot] (aggregation workflow) — skipping PR check verification."
+          echo "Commit from github-actions[bot] (aggregation workflow) — skipping PR check verification."
           exit 0
 
       - name: Checkout repo
-        if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
+        if: github.actor != 'github-actions[bot]'
         uses: actions/checkout@v4
 
       - name: Install GitHub CLI
-        if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
+        if: github.actor != 'github-actions[bot]'
         run: |
           if ! command -v gh >/dev/null 2>&1; then
             sudo apt-get update
@@ -37,7 +37,7 @@ jobs:
           fi
 
       - name: Wait for all required checks to finish and succeed
-        if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
+        if: github.actor != 'github-actions[bot]'
         id: wait-checks
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -132,5 +132,5 @@ jobs:
           exit 1
 
       - name: Success message
-        if: success() && (github.event_name != 'push' || github.actor != 'github-actions[bot]')
+        if: success() && github.actor != 'github-actions[bot]'
         run: echo "Final verification check passed. Auto-merge can proceed."

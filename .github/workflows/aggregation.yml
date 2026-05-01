@@ -133,13 +133,38 @@ jobs:
         if: env.TRIGGER_INFO != 'pull request'
 
 
-      - name: Commit and Push Changes
+      - name: Commit changes to a branch
         run: |
-          git pull origin main
-          git diff
+          set -e
+
+          BRANCH="automation/aggregation-output"
+
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
+
+          git checkout -B "$BRANCH"
+
           git add README.md merge/EBeam.png
+
+          # Avoid failing when there's nothing new to commit
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
           git commit -m "Aggregation layout: $ARTIFACT_URL"
-          git push origin main
+          git push -u origin "$BRANCH" --force
+        if: env.TRIGGER_INFO != 'pull request' && github.repository_owner == 'SiEPIC'
+
+      - name: Create or update Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.PAT }}
+          branch: automation/aggregation-output
+          base: main
+          title: "Update aggregation outputs"
+          body: |
+            Automated aggregation update.
+            Artifact: ${{ env.ARTIFACT_URL }}
+          commit-message: "Aggregation layout: ${{ env.ARTIFACT_URL }}"
         if: env.TRIGGER_INFO != 'pull request' && github.repository_owner == 'SiEPIC'
