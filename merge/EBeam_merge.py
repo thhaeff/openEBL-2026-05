@@ -369,5 +369,3 @@ layout.technology_name = 'EBeam'
 top_cell.image(os.path.join(path,'EBeam.png'))
 
 print("KLayout EBeam_merge.py, completed in: %s seconds" % int((time.time() - start_time)))
-
-

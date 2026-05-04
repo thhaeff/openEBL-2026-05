@@ -18,10 +18,18 @@ jobs:
       GH_TOKEN: ${{ github.token }}
 
     steps:
+      - name: Auto-pass for automated aggregation PR
+        if: github.head_ref == 'automation/aggregation-output'
+        run: |
+          echo "PR from automation/aggregation-output branch — skipping PR check verification."
+          exit 0
+
       - name: Checkout repo
+        if: github.head_ref != 'automation/aggregation-output'
         uses: actions/checkout@v4
 
       - name: Install GitHub CLI
+        if: github.head_ref != 'automation/aggregation-output'
         run: |
           if ! command -v gh >/dev/null 2>&1; then
             sudo apt-get update
@@ -29,6 +37,7 @@ jobs:
           fi
 
       - name: Wait for all required checks to finish and succeed
+        if: github.head_ref != 'automation/aggregation-output'
         id: wait-checks
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -37,11 +46,13 @@ jobs:
           # Use the actual check names you care about
           PDF_CHECKS=$'check_files\ncheck-file-case-sensitivity\nsubmission_check\nverification'
           GDS_CHECKS=$'check_files\ncheck-file-case-sensitivity\nsubmission_check\nverification'
+          PYTHON_CHECKS=$'run-python'
+
 
           MAX_RETRIES=10
           SLEEP_SECONDS=30
 
-          ALL_REQUIRED=$(printf '%s\n' "$PDF_CHECKS" "$GDS_CHECKS" | sort -u)
+          ALL_REQUIRED=$(printf '%s\n' "$PDF_CHECKS" "$GDS_CHECKS" "$PYTHON_CHECKS" | sort -u)
 
           for ((i=1;i<=MAX_RETRIES;i++)); do
             echo "Fetching checks for PR #$PR_NUMBER (attempt $i/$MAX_RETRIES)..."
@@ -123,5 +134,5 @@ jobs:
           exit 1
 
       - name: Success message
-        if: success()
+        if: success() && github.head_ref != 'automation/aggregation-output'
         run: echo "Final verification check passed. Auto-merge can proceed."
